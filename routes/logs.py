@@ -1,6 +1,6 @@
-# TODO DAY 2 - Tolentino:
-# - Create Blueprint: logs_bp
-# - Define routes for /logs
+from flask import Blueprint
+
+logs_bp = Blueprint('logs', __name__)
 
 # TODO DAY 2 - Ocariza:
 # - Implement CRUD routes: Add Log (IN/OUT), View, Delete
