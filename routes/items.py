@@ -1,6 +1,6 @@
-# TODO DAY 2 - Tolentino:
-# - Create Blueprint: items_bp
-# - Define routes for /items
+from flask import Blueprint
+
+items_bp = Blueprint('items', __name__)
 
 # TODO DAY 2 - Ocariza:
 # - Implement CRUD routes: Add, View, Update, Delete
