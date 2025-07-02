@@ -1,63 +1,92 @@
 from flask import Blueprint, request, jsonify
-from routes.items import items 
+from database import query_db
 
 logs_bp = Blueprint('logs', __name__)
-logs = []
 
 @logs_bp.route('/logs', methods=['POST'])
 def add_log():
     data = request.get_json()
-    required = {'item_id', 'type', 'qty', 'date'}
-
-    if not data or not required.issubset(data):
+    required_fields = {'item_id', 'type', 'qty', 'date'}
+    if not data or not required_fields.issubset(data):
         return jsonify({'error': 'Invalid input'}), 400
 
-    if data['type'] not in ('IN', 'OUT'):
-        return jsonify({'error': 'Invalid type'}), 400
+    item = query_db("SELECT * FROM Item WHERE item_id = ?",
+                    (data['item_id'],), one=True)
+    if not item:
+        return jsonify({"error": "Item not found"}), 404
 
-    for item in items:
-        if item['id'] == data['item_id']:
-            if data['type'] == 'IN':
-                item['quantity'] += data['qty']
-            elif data['type'] == 'OUT':
-                if item['quantity'] < data['qty']:
-                    return jsonify({
-                        'error': 'Not enough stock to remove'
-                    }), 400
-                item['quantity'] -= data['qty']
-            break
+    current_qty = item['quantity']
+    qty = data['qty']
+
+    if data['type'] == 'IN':
+        new_qty = current_qty + qty
+    elif data['type'] == 'OUT':
+        if qty > current_qty:
+            return jsonify({"error": "Not enough stock"}), 400
+        new_qty = current_qty - qty
     else:
-        return jsonify({'error': 'Item not found'}), 404
+        return jsonify({"error": "Invalid type"}), 400
 
-    logs.append(data)
-    return jsonify({
-        'message': 'Log recorded and inventory updated',
-        'log': data
-    }), 201
+    query_db("INSERT INTO Log (item_id, type, qty, date) VALUES (?, ?, ?, ?)",
+             (data['item_id'], data['type'], qty, data['date']))
+    query_db("UPDATE Item SET quantity = ? WHERE item_id = ?",
+             (new_qty, data['item_id']))
+
+    return jsonify({"message": "Log recorded and inventory updated"}), 201
 
 @logs_bp.route('/logs', methods=['GET'])
 def get_logs():
-    return jsonify(logs)
+    logs = query_db("""
+        SELECT Log.log_id, Item.name, Log.type, Log.qty, Log.date
+        FROM Log JOIN Item ON Log.item_id = Item.item_id
+        ORDER BY Log.date DESC
+    """)
+    return jsonify([dict(log) for log in logs])
 
 @logs_bp.route('/logs/<int:log_id>', methods=['PUT'])
 def update_log(log_id):
     data = request.get_json()
     required = {'item_id', 'type', 'qty', 'date'}
-
     if not data or not required.issubset(data):
         return jsonify({'error': 'Invalid input'}), 400
 
-    if data['type'] not in ('IN', 'OUT'):
+    old_log = query_db("SELECT * FROM Log WHERE log_id = ?", 
+                       (log_id,), one=True)
+    if not old_log:
+        return jsonify({'error': 'Log not found'}), 404
+
+    item = query_db("SELECT * FROM Item WHERE item_id = ?", 
+                    (old_log['item_id'],), one=True)
+    if not item:
+        return jsonify({'error': 'Related item not found'}), 404
+
+    current_qty = item['quantity']
+
+    if old_log['type'] == 'IN':
+        current_qty -= old_log['qty']
+    elif old_log['type'] == 'OUT':
+        current_qty += old_log['qty']
+
+    new_type = data['type']
+    new_qty = data['qty']
+
+    if new_type == 'IN':
+        current_qty += new_qty
+    elif new_type == 'OUT':
+        if new_qty > current_qty:
+            return jsonify({'error': 'Not enough stock for update'}), 400
+        current_qty -= new_qty
+    else:
         return jsonify({'error': 'Invalid type'}), 400
 
-    for i, log in enumerate(logs):
-        if log.get('id') == log_id:
-            logs[i] = data
-            return jsonify({
-                'message': 'Log fully updated',
-                'log': data
-            })
-    return jsonify({'error': 'Log not found'}), 404
+    query_db(""" UPDATE Log SET item_id = ?, type = ?, qty = ?, date = ?
+        WHERE log_id = ? """, 
+        (data['item_id'], new_type, new_qty, data['date'], log_id))
+
+    query_db("UPDATE Item SET quantity = ? WHERE item_id = ?",
+             (current_qty, old_log['item_id']))
+
+    return jsonify({'message': 'Log fully updated and inventory adjusted'})
 
 @logs_bp.route('/logs/<int:log_id>', methods=['PATCH'])
 def patch_log(log_id):
@@ -65,30 +94,54 @@ def patch_log(log_id):
     if not data:
         return jsonify({'error': 'No data provided'}), 400
 
-    if 'type' in data and data['type'] not in ('IN', 'OUT'):
+    log = query_db("SELECT * FROM Log WHERE log_id = ?", (log_id,), one=True)
+    if not log:
+        return jsonify({'error': 'Log not found'}), 404
+
+    item = query_db("SELECT * FROM Item WHERE item_id = ?", 
+                    (log['item_id'],), one=True)
+    if not item:
+        return jsonify({'error': 'Related item not found'}), 404
+
+    current_qty = item['quantity']
+
+    if log['type'] == 'IN':
+        current_qty -= log['qty']
+    elif log['type'] == 'OUT':
+        current_qty += log['qty']
+
+    new_type = data.get('type', log['type'])
+    new_qty = data.get('qty', log['qty'])
+    new_date = data.get('date', log['date'])
+    new_item_id = data.get('item_id', log['item_id'])
+
+    if new_item_id != log['item_id']:
+        return jsonify({'error': 'Changing item_id is not '
+        'supported in this patch'}), 400
+
+    if new_type == 'IN':
+        current_qty += new_qty
+    elif new_type == 'OUT':
+        if new_qty > current_qty:
+            return jsonify({'error': 'Not enough stock to apply update'}), 400
+        current_qty -= new_qty
+    else:
         return jsonify({'error': 'Invalid type'}), 400
 
-    if 'item_id' in data:
-        return jsonify({
-            'error': 'Changing item_id is not allowed in patch'
-        }), 400
+    query_db("""
+        UPDATE Log SET type = ?, qty = ?, date = ?
+        WHERE log_id = ?
+    """, (new_type, new_qty, new_date, log_id))
 
-    for log in logs:
-        if log.get('id') == log_id:
-            log.update(data)
-            return jsonify({
-                'message': 'Log updated (partially)',
-                'log': log
-            })
-    return jsonify({'error': 'Log not found'}), 404
+    query_db("UPDATE Item SET quantity = ? WHERE item_id = ?",
+             (current_qty, log['item_id']))
+
+    return jsonify({'message': 'Log updated and inventory adjusted'})
 
 @logs_bp.route('/logs/<int:log_id>', methods=['DELETE'])
 def delete_log(log_id):
-    for log in logs:
-        if log.get('id') == log_id:
-            logs.remove(log)
-            return jsonify({'message': 'Log deleted'})
-    return jsonify({'error': 'Log not found'}), 404
+    query_db("DELETE FROM Log WHERE log_id = ?", (log_id,))
+    return jsonify({"message": "Log deleted"})
 
 # TODO DAY 3 - Ocariza:
 # - Add error handling and input validation for log endpoints
