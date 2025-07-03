@@ -5,6 +5,7 @@ logs_bp = Blueprint('logs', __name__)
 
 @logs_bp.route('/logs', methods=['POST'])
 def add_log():
+    """Add a new log and adjust item quantity."""
     data = request.get_json()
     required_fields = {'item_id', 'type', 'qty', 'date'}
     if not data or not required_fields.issubset(data):
@@ -39,6 +40,7 @@ def add_log():
 
 @logs_bp.route('/logs', methods=['GET'])
 def get_logs():
+    """Get all logs with item names."""
     logs = query_db("""
         SELECT Log.log_id, Item.name, Log.type, Log.qty, Log.date
         FROM Log JOIN Item ON Log.item_id = Item.item_id
@@ -48,6 +50,7 @@ def get_logs():
 
 @logs_bp.route('/logs/<int:log_id>', methods=['PUT'])
 def update_log(log_id):
+    """Update a full log entry and adjust inventory accordingly."""
     data = request.get_json()
     required = {'item_id', 'type', 'qty', 'date'}
     if not data or not required.issubset(data):
@@ -96,6 +99,7 @@ def update_log(log_id):
 
 @logs_bp.route('/logs/<int:log_id>', methods=['PATCH'])
 def patch_log(log_id):
+    """Partially update a log entry and adjust inventory."""
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -147,6 +151,7 @@ def patch_log(log_id):
 
 @logs_bp.route('/logs/<int:log_id>', methods=['DELETE'])
 def delete_log(log_id):
+    """Delete a log and reverse its effect on inventory."""
     log = query_db("SELECT * FROM Log WHERE log_id = ?", (log_id,), one=True)
     if not log:
         return jsonify({'error': 'Log not found'}), 404
