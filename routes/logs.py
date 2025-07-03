@@ -52,8 +52,8 @@ def get_logs():
 def update_log(log_id):
     """Update a full log entry and adjust inventory accordingly."""
     data = request.get_json()
-    required = {'item_id', 'type', 'qty', 'date'}
-    if not data or not required.issubset(data):
+    required_fields = {'item_id', 'type', 'qty', 'date'}
+    if not data or not required_fields.issubset(data):
         return jsonify({'error': 'Invalid input'}), 400
     
     if not isinstance(data['qty'], int):
@@ -99,7 +99,7 @@ def update_log(log_id):
 
 @logs_bp.route('/logs/<int:log_id>', methods=['PATCH'])
 def patch_log(log_id):
-    """Partially update a log entry and adjust inventory."""
+    """Partially update a log entry (item_id cannot be changed)."""
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
