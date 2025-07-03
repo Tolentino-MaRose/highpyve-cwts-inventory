@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DB = 'database.db'
+DB = 'cwts_inventory.db'
 
 def init_db():
     """ Initialize the SQLite database using schema.sql if the database file 
