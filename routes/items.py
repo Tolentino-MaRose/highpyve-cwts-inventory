@@ -5,10 +5,14 @@ items_bp = Blueprint('items', __name__)
 
 @items_bp.route('/items', methods=['POST'])
 def add_item():
+    """Add a new item to the inventory."""
     data = request.get_json()
     
     if not data or 'name' not in data or 'quantity' not in data:
         return jsonify({'error': 'Invalid input'}), 400
+    
+    if not isinstance(data['quantity'], int):
+        return jsonify({'error': 'Quantity must be an integer'}), 400
    
     query_db("INSERT INTO Item (name, quantity) VALUES (?, ?)",
              (data['name'], data['quantity']))
@@ -16,15 +20,22 @@ def add_item():
 
 @items_bp.route('/items', methods=['GET'])
 def get_items():
+    """Get all items from the inventory."""
     items = query_db("SELECT * FROM Item")
     return jsonify([dict(item) for item in items])
 
 @items_bp.route('/items/<int:item_id>', methods=['PUT'])
 def update_item(item_id):
+    """Update item quantity completely."""
     data = request.get_json()
     
     if not data or 'quantity' not in data:
         return jsonify({'error': 'Invalid input'}), 400
+    
+    item = query_db("SELECT * FROM Item WHERE item_id = ?", 
+                    (item_id,), one=True)
+    if not item:
+        return jsonify({'error': 'Item not found'}), 404
    
     query_db("UPDATE Item SET quantity = ? WHERE item_id = ?",
              (data['quantity'], item_id))
@@ -32,6 +43,7 @@ def update_item(item_id):
 
 @items_bp.route('/items/<int:item_id>', methods=['PATCH'])
 def patch_item(item_id):
+    """Partially update item name or quantity."""
     data = request.get_json()
     
     if not data:
@@ -52,5 +64,11 @@ def patch_item(item_id):
 
 @items_bp.route('/items/<int:item_id>', methods=['DELETE'])
 def delete_item(item_id):
+    """Delete an item by ID."""
+    item = query_db("SELECT * FROM Item WHERE item_id = ?", 
+                    (item_id,), one=True)
+    if not item:
+        return jsonify({'error': 'Item not found'}), 404
+    
     query_db("DELETE FROM Item WHERE item_id = ?", (item_id,))
     return jsonify({"message": "Item deleted"})
