@@ -32,7 +32,8 @@ def update_item(item_id):
     if not data or 'quantity' not in data:
         return jsonify({'error': 'Invalid input'}), 400
     
-    item = query_db("SELECT * FROM Item WHERE item_id = ?", (item_id,), one=True)
+    item = query_db("SELECT * FROM Item WHERE item_id = ?", 
+                    (item_id,), one=True)
     if not item:
         return jsonify({'error': 'Item not found'}), 404
    
@@ -64,7 +65,8 @@ def patch_item(item_id):
 @items_bp.route('/items/<int:item_id>', methods=['DELETE'])
 def delete_item(item_id):
     """Delete an item by ID."""
-    item = query_db("SELECT * FROM Item WHERE item_id = ?", (item_id,), one=True)
+    item = query_db("SELECT * FROM Item WHERE item_id = ?", 
+                    (item_id,), one=True)
     if not item:
         return jsonify({'error': 'Item not found'}), 404
     
