@@ -9,6 +9,9 @@ def add_log():
     required_fields = {'item_id', 'type', 'qty', 'date'}
     if not data or not required_fields.issubset(data):
         return jsonify({'error': 'Invalid input'}), 400
+    
+    if not isinstance(data['qty'], int):
+        return jsonify({'error': 'Quantity must be an integer'}), 400
 
     item = query_db("SELECT * FROM Item WHERE item_id = ?",
                     (data['item_id'],), one=True)
@@ -49,6 +52,9 @@ def update_log(log_id):
     required = {'item_id', 'type', 'qty', 'date'}
     if not data or not required.issubset(data):
         return jsonify({'error': 'Invalid input'}), 400
+    
+    if not isinstance(data['qty'], int):
+        return jsonify({'error': 'Quantity must be an integer'}), 400
 
     old_log = query_db("SELECT * FROM Log WHERE log_id = ?", 
                        (log_id,), one=True)
@@ -117,7 +123,10 @@ def patch_log(log_id):
 
     if new_item_id != log['item_id']:
         return jsonify({'error': 'Changing item_id is not '
-        'supported in this patch'}), 400
+                        'supported in this patch'}), 400
+    
+    if not isinstance(new_qty, int):
+        return jsonify({'error': 'Quantity must be an integer'}), 400
 
     if new_type == 'IN':
         current_qty += new_qty
@@ -128,10 +137,8 @@ def patch_log(log_id):
     else:
         return jsonify({'error': 'Invalid type'}), 400
 
-    query_db("""
-        UPDATE Log SET type = ?, qty = ?, date = ?
-        WHERE log_id = ?
-    """, (new_type, new_qty, new_date, log_id))
+    query_db(""" UPDATE Log SET type = ?, qty = ?, date = ? 
+             WHERE log_id = ? """, (new_type, new_qty, new_date, log_id))
 
     query_db("UPDATE Item SET quantity = ? WHERE item_id = ?",
              (current_qty, log['item_id']))
@@ -140,8 +147,24 @@ def patch_log(log_id):
 
 @logs_bp.route('/logs/<int:log_id>', methods=['DELETE'])
 def delete_log(log_id):
-    query_db("DELETE FROM Log WHERE log_id = ?", (log_id,))
-    return jsonify({"message": "Log deleted"})
+    log = query_db("SELECT * FROM Log WHERE log_id = ?", (log_id,), one=True)
+    if not log:
+        return jsonify({'error': 'Log not found'}), 404
 
-# TODO DAY 3 - Ocariza:
-# - Add error handling and input validation for log endpoints
+    item = query_db("SELECT * FROM Item WHERE item_id = ?",
+                    (log['item_id'],), one=True)
+    if not item:
+        return jsonify({'error': 'Related item not found'}), 404
+
+    current_qty = item['quantity']
+
+    if log['type'] == 'IN':
+        current_qty -= log['qty']
+    elif log['type'] == 'OUT':
+        current_qty += log['qty']
+
+    query_db("DELETE FROM Log WHERE log_id = ?", (log_id,))
+    query_db("UPDATE Item SET quantity = ? WHERE item_id = ?",
+             (current_qty, log['item_id']))
+
+    return jsonify({"message": "Log deleted and inventory reverted"})
