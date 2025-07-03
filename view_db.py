@@ -1,6 +1,6 @@
 import sqlite3
 
-DB = 'database.db'
+DB = 'cwts_inventory.db'
 
 def display_table(table_name):
     """Display all rows from the specified table."""
