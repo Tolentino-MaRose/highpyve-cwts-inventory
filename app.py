@@ -14,7 +14,3 @@ app.register_blueprint(logs_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-# TODO DAY 3 - Tolentino:
-# - Clean and finalize routing structure
-# - Add optional logging or print statements
