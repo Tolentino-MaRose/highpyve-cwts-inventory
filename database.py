@@ -11,7 +11,7 @@ def init_db():
             with open('schema.sql', 'r') as f:
                 conn.executescript(f.read())
 
-def query_db(query, args=(), one=False):
+def query_db(query, args=(), is_one=False):
     """Execute any SQL query and return results (dicts for SELECT)."""
     try:
         with sqlite3.connect(DB) as conn:
@@ -21,7 +21,7 @@ def query_db(query, args=(), one=False):
             
             if query.strip().lower().startswith("select"):
                 result = cursor.fetchall()
-                return result[0] if result and one else result
+                return result[0] if result and is_one else result
 
             conn.commit()
             return None
