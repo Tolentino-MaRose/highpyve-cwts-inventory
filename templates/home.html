@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CWTS Inventory System API</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; padding: 20px;">
+    <h1>CWTS Inventory System API</h1>
+    <p>A REST API to manage inventory items used for CWTS activities.</p>
+
+    <h2>Endpoints</h2>
+    <h3>Items</h3>
+    <ul>
+      <li><code>/items</code> – GET all inventory items</li>
+      <li><code>/items/&lt;id&gt;</code> – GET, PUT, DELETE item by ID</li>
+    </ul>
+
+    <h3>Logs</h3>
+    <ul>
+      <li><code>/logs</code> – GET all inventory items</li>
+      <li><code>/logs/&lt;id&gt;</code> – GET, PUT, DELETE item by ID</li>
+    </ul>
+
+    <h2>Example Item Response</h2>
+    <pre>{
+  "id": 1,
+  "name": "Broom",
+  "category": "Cleaning Supplies",
+  "quantity": 10
+}</pre>
+
+    <h2>Example Log Response</h2>
+    <pre>{
+  "date": "2025-07-03",
+  "log_id": 1,
+  "name": "Dust Pan (Pangdakot)",
+  "qty": 5,
+  "type": "OUT"
+}</pre>
+  </body>
+</html>
