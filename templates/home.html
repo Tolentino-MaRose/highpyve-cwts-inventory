@@ -7,34 +7,76 @@
     <h1>CWTS Inventory System API</h1>
     <p>A REST API to manage inventory items used for CWTS activities.</p>
 
+    <h2>How to Access</h2>
+    <p>Copy these URLs to access the endpoints:</p>
+    <ul>
+      <li><code>https://cwtsinventory.onrender.com/items</code></li>
+      <li><code>https://cwtsinventory.onrender.com/logs</code></li>
+    </ul>
+
     <h2>Endpoints</h2>
     <h3>Items</h3>
     <ul>
       <li><code>/items</code> – GET all inventory items</li>
-      <li><code>/items/&lt;id&gt;</code> – GET, PUT, DELETE item by ID</li>
     </ul>
 
     <h3>Logs</h3>
     <ul>
-      <li><code>/logs</code> – GET all inventory items</li>
-      <li><code>/logs/&lt;id&gt;</code> – GET, PUT, DELETE item by ID</li>
+      <li><code>/logs</code> – GET all inventory logs</li>
     </ul>
 
     <h2>Example Item Response</h2>
     <pre>{
-  "id": 1,
-  "name": "Broom",
-  "category": "Cleaning Supplies",
-  "quantity": 10
-}</pre>
+        "id": 1,
+        "name": "Broom",
+        "category": "Cleaning Supplies",
+        "quantity": 10
+    }</pre>
 
     <h2>Example Log Response</h2>
     <pre>{
-  "date": "2025-07-03",
-  "log_id": 1,
-  "name": "Dust Pan (Pangdakot)",
-  "qty": 5,
-  "type": "OUT"
-}</pre>
+        "date": "2025-07-03",
+        "log_id": 1,
+        "name": "Dust Pan (Pangdakot)",
+        "qty": 5,
+        "type": "OUT"
+    }</pre>
+
+    <h2>Performing CRUD Operations Using Postman</h2>
+    <p>You can test and interact with this API using <strong>Postman</strong>. 
+      Below are the available operations:</p>
+
+    <h3>Available Operations for <code>/items</code>:</h3>
+    <ul>
+      <li><strong>POST /items</strong> – Add a new item</li>
+      <li><strong>GET /items</strong> – Retrieve all items</li>
+      <li><strong>PUT /items/&lt;item_id&gt;</strong> 
+        – Fully update an item’s quantity</li>
+      <li><strong>PATCH /items/&lt;item_id&gt;</strong> 
+        – Partially update item name or quantity</li>
+      <li><strong>DELETE /items/&lt;item_id&gt;</strong> 
+        – Delete an item by ID</li>
+    </ul>
+
+    <h3>Available Operations for <code>/logs</code>:</h3>
+    <ul>
+      <li><strong>POST /logs</strong> 
+        – Add a new log and update item quantity</li>
+      <li><strong>GET /logs</strong> 
+        – Retrieve all logs with item names</li>
+      <li><strong>PUT /logs/&lt;log_id&gt;</strong> 
+        – Fully update a log entry and adjust inventory</li>
+      <li><strong>PATCH /logs/&lt;log_id&gt;</strong> 
+        – Partially update a log (type, qty, date)</li>
+      <li><strong>DELETE /logs/&lt;log_id&gt;</strong> 
+        – Delete a log and revert its effect on inventory</li>
+    </ul>
+
+     <p>Make sure to use <strong>raw JSON</strong> 
+      format in the Body tab when testing POST, PUT, or 
+      PATCH requests in Postman.</p>
+
+    <hr>
+    <p><strong>Maintained by:</strong> HighPyve</p>
   </body>
 </html>
