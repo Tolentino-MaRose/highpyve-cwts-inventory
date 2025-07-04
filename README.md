@@ -82,7 +82,6 @@ cwts-inventory/
 ├── .gitignore
 ├── cwts_inventory.db
 ├── database.py
-├── view_db.py
 ├── schema.sql
 ├── requirements.txt
 ├── Procfile
