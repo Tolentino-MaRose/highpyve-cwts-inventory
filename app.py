@@ -6,13 +6,11 @@ from routes.home import home_bp
 
 app = Flask(__name__)
 
-# Initialize database
-init_db()
-
 # Register blueprints
 app.register_blueprint(items_bp)
 app.register_blueprint(logs_bp)
 app.register_blueprint(home_bp)
 
 if __name__ == '__main__':
+    init_db()
     app.run(debug=True)
