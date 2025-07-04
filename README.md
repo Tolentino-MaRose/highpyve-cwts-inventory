@@ -1,21 +1,26 @@
 # CWTS Inventory Management System
 
-A lightweight, RESTful web application built using **Python**, **Flask**, and **SQLite** to manage inventory and track item logs for a CWTS (Civic Welfare Training Service) program. This project supports real-time API interactions and is deployed for web access.
+A lightweight, RESTful web application built using **Python**, **Flask**, 
+and **SQLite** to manage inventory and track item logs for a CWTS 
+(Civic Welfare Training Service) program. This project supports real-time 
+API interactions and is deployed for web access.
 
 ---
 
-## Live Demo
+## Deployed Web Application
 
-🔗 [Deployed Web App]: https://cwtsinventory.onrender.com 
+🔗: https://cwtsinventory.onrender.com 
 
 ---
 
 ## Features
 
 - **Item Management**: Track inventory items with CRUD operations
-- **Transaction Logs**: Record IN/OUT transactions with automatic inventory updates
+- **Transaction Logs**: Record IN/OUT transactions with automatic 
+inventory updates
 - **RESTful Endpoints**: JSON-based API following REST conventions
-- **Data Integrity**: Ensures inventory quantities are always consistent with transaction logs
+- **Data Integrity**: Ensures inventory quantities are always consistent
+ with transaction logs
 
 ---
 
@@ -41,7 +46,8 @@ A lightweight, RESTful web application built using **Python**, **Flask**, and **
 ### Logs
 - `GET /logs` - Get all transaction logs with item details
 - `POST /logs` - Add a new transaction log (adjusts inventory automatically)
-- `PUT /logs/<int:log_id>` - Fully update a log (adjusts inventory accordingly)
+- `PUT /logs/<int:log_id>` - Fully update a log (adjusts inventory 
+accordingly)
 - `PATCH /logs/<int:log_id>` - Partially update a log (adjusts inventory)
 - `DELETE /logs/<int:log_id>` - Delete a log (reverts inventory changes)
 
